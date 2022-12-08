@@ -14,41 +14,34 @@ namespace Server.Hubs
             _gameService = gameService;
         }
 
-        public async Task MakeMove(string name, int number)
+        public async Task GuessNumber(int number)
         {
-
-            _logger.LogInformation("Guessed number: {Number}", number);
-            await Clients.All.BroadcastMove(name, number);
+            var gameState = _gameService.TryGuessMysteryNumber(Context.ConnectionId, number);
+            await Clients.Group(gameState.GameId.ToString()).UpdateGameState(gameState);
         }
 
-        public async Task OnConnected(string name)
+        public async Task Register(string name)
         {
-            var game = _gameService.Join(name, Context.ConnectionId);
-            await Groups.AddToGroupAsync(Context.ConnectionId, game.Id.ToString());
+            var gameState = _gameService.Join(name, Context.ConnectionId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, gameState.GameId.ToString());
+            await Clients.Group(gameState.GameId.ToString()).UpdateGameState(gameState);
+        }
 
-            if (game.State == Domain.GameState.AwaitingPlayers)
-            {
-                await Clients.Group(game.Id.ToString()).Notify("Awaiting another player to start...");
-            }
-            else
-            {
-                await Clients.Group(game.Id.ToString()).Notify($"Game started. {game?.CurrentPlayer?.Name}'s turn!");
-            }
-
+        public override async Task OnConnectedAsync()
+        {
+            _logger.LogInformation("Connected: {ConnectionId}", Context.ConnectionId);
+            await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             //If game is complete delete it
-            var game = _gameService.FindCurrent(Context.ConnectionId);
+            var gameState = _gameService.Abandon(Context.ConnectionId);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameState.GameId.ToString());
+            await Clients.Group(gameState.GameId.ToString()).UpdateGameState(gameState);
 
-            if (game is not null)
-            {
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, game.Id.ToString());
-                //TODO
-                //await Clients.Group(game.Id.ToString()).Concede();
-                _gameService.Abandon(game.Id);
-            }
+            _logger.LogInformation("Disconnected: {ConnectionId}", Context.ConnectionId);
+            await base.OnDisconnectedAsync(exception);
         }
     }
 }

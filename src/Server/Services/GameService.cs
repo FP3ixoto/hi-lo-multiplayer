@@ -1,34 +1,98 @@
-﻿using Server.Domain;
+﻿using Server.Contracts;
+using Server.Domain;
 using Server.Repositories;
 
-namespace Server.Services
+namespace Server.Services;
+
+public sealed class GameService : IGameService
 {
-    public sealed class GameService : IGameService
+    private readonly IGameRepository _gameRepository;
+
+    public GameService(IGameRepository gameRepository)
     {
-        private readonly IGameRepository _gameRepository;
+        _gameRepository = gameRepository;
+    }
 
-        public GameService(IGameRepository gameRepository)
+    public GameState Join(string playerName, string playerConnectionId)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(playerName);
+        ArgumentException.ThrowIfNullOrEmpty(playerConnectionId);
+
+        var game = _gameRepository.FindOpen();
+
+        if (game is null)
         {
-            _gameRepository = gameRepository;
+            game = new Game();
+            _gameRepository.Add(game);
         }
 
-        public Game Join(string playerName, string playerConnectionId)
-        {
-            var openGame = _gameRepository.FindOpen();
+        game.AddPlayer(playerName, playerConnectionId);
 
-            if (openGame is null)
+        return new GameState()
+        {
+            GameId = game.Id,
+            GameStateDescription = game.State.Description(),
+            PlayerTurn = game.CurrentPlayer?.Name ?? string.Empty
+        };
+    }
+
+    public GameState TryGuessMysteryNumber(string playerConnectionId, int number)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(playerConnectionId);
+
+        var game = _gameRepository.Current(playerConnectionId);
+
+        if (game is null)
+        {
+            throw new InvalidOperationException("Player hasn't started a game yet.");
+        }
+
+        game.AssertValidInProgressGameState();
+
+        //Ignore if not player turn
+        if (game.CurrentPlayer!.ConnectionId != playerConnectionId)
+        {
+            throw new InvalidOperationException("Wrong player turn.");
+        }
+
+        var currentPlayerName = game.CurrentPlayer.Name;
+        var hiLo = game.ProposeNumber(number);
+
+        return new GameState()
+        {
+            GameId = game.Id,
+            GameStateDescription = game.State.Description(),
+            PlayerTurn = game.CurrentPlayer?.Name ?? string.Empty,
+            Winner = hiLo == 0 ? currentPlayerName : string.Empty,
+            LastMove = new GameMove()
             {
-                openGame = new Game();
-                _gameRepository.Add(openGame);
+                Player = currentPlayerName,
+                ProposedNumber = number,
+                HiLo = hiLo
             }
+        };
+    }
 
-            openGame.AddPlayer(playerName, playerConnectionId);
-            return openGame;
+    public GameState Abandon(string playerConnectionId)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(playerConnectionId);
+
+        var game = _gameRepository.Current(playerConnectionId);
+
+        if (game is null)
+        {
+            throw new InvalidOperationException("Player hasn't started a game yet.");
         }
 
-        public Game? FindCurrent(string playerConnectionId) =>
-            _gameRepository.Current(playerConnectionId);
+        game.AssertValidInProgressGameState();
 
-        public void Abandon(Guid gameId) => _gameRepository.Remove(gameId);
+        _gameRepository.Remove(game.Id);
+
+        return new GameState()
+        {
+            GameId = game.Id,
+            GameStateDescription = game.State.Description(),
+            Winner = game.Player1?.ConnectionId == playerConnectionId ? game.Player2!.Name : game.Player1!.Name
+        };
     }
 }

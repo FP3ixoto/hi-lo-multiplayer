@@ -1,8 +1,9 @@
-﻿namespace Server.Hubs
+﻿using Server.Contracts;
+
+namespace Server.Hubs
 {
     public interface IGameClient
     {
-        Task BroadcastMove(string name, int number);
-        Task Notify(string message);
+        Task UpdateGameState(GameState gameState);
     }
 }

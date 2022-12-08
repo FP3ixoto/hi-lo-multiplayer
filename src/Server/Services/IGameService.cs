@@ -1,11 +1,11 @@
-﻿using Server.Domain;
+﻿using Server.Contracts;
 
 namespace Server.Services
 {
     public interface IGameService
     {
-        Game Join(string playerName, string playerConnectionId);
-        Game? FindCurrent(string playerConnectionId);
-        void Abandon(Guid gameId);
+        GameState Join(string playerName, string playerConnectionId);
+        GameState TryGuessMysteryNumber(string playerConnectionId, int number);
+        GameState Abandon(string playerConnectionId);
     }
 }

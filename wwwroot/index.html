@@ -15,7 +15,11 @@
 </head>
 <body>
     <div class="container">
-        <span id="info" />
+        <p id="state" />
+        <p id="playerturn" />
+        <p id="winner" />
+    </div>
+    <div class="container">
         <input type="number" id="message" />
         <input type="button" id="sendmessage" value="Send" />
         <ul id="discussion"></ul>
@@ -25,6 +29,8 @@
 
     <!--Add script to update the page and send messages.-->
     <script type="text/javascript">
+
+
         document.addEventListener('DOMContentLoaded', function () {
 
             var messageInput = document.getElementById('message');
@@ -43,21 +49,39 @@
                 .build();
 
             // Create a function that the hub can call to broadcast messages.
-            connection.on('notify', function ( message) {
-                // Html encode display name and message.
-                var encodedMsg = message;
-                // Add the message to the page.
-                document.getElementById('info').innerHTML = encodedMsg;
-            });
+            //connection.on('notify', function ( message) {
+            //    // Html encode display name and message.
+            //    var encodedMsg = message;
+            //    // Add the message to the page.
+            //    document.getElementById('info').innerHTML = encodedMsg;
+            //});
 
             // Create a function that the hub can call to broadcast messages.
-            connection.on('broadcastMove', function (name, message) {
+            //connection.on('turn', function (message) {
+            //    document.getElementById('playerturn').innerHTML = 'Player turn: ' + message;
+            //});
+
+            // Create a function that the hub can call to broadcast messages.
+            //connection.on('state', function (message) {
+            //    document.getElementById('state').innerHTML = 'Game state: ' + message;
+            //});
+
+            // Create a function that the hub can call to broadcast messages.
+            connection.on('updateGameState', function (gameState) {
+                document.getElementById('playerturn').innerHTML = 'Player turn: ' + gameState.playerTurn;
+                document.getElementById('state').innerHTML = 'Game state: ' + gameState.gameStateDescription;
+                document.getElementById('winner').innerHTML = 'Winner: ' + gameState.winner;
+
+
                 // Html encode display name and message.
-                var encodedName = name;
-                var encodedMsg = message;
+                //var encodedName = name;
+                //var encodedMsg = message;
                 // Add the message to the page.
                 var liElement = document.createElement('li');
-                liElement.innerHTML = '<strong>' + encodedName + '</strong>:&nbsp;&nbsp;' + encodedMsg;
+                liElement.innerHTML =
+                    '<strong>' + gameState.lastMove.player
+                    + '</strong>:&nbsp;&nbsp;' + gameState.lastMove.proposedNumber
+                    + '&nbsp;&nbsp;-&nbsp;&nbsp;' + gameState.lastMove.hiLo;
                 document.getElementById('discussion').appendChild(liElement);
             });
 
@@ -67,14 +91,14 @@
                     console.log('connection started');
                     document.getElementById('sendmessage').addEventListener('click', function (event) {
                         // Call the Send method on the hub.
-                        connection.invoke('makeMove', name, parseInt(messageInput.value));
+                        connection.invoke('GuessNumber', parseInt(messageInput.value));
 
                         // Clear text box and reset focus for next comment.
                         messageInput.value = '';
                         messageInput.focus();
                         event.preventDefault();
                     });
-                    connection.invoke('onConnected', name);
+                    connection.invoke('register', name);
                 })
                 .catch(error => {
                     console.error(error.message);
