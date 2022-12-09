@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+﻿using Server.Services;
 
 namespace Server.Domain;
 
@@ -8,13 +8,18 @@ public class Game
     public Player? CurrentPlayer { get; private set; }
     public Player? Player1 { get; private set; }
     public Player? Player2 { get; private set; }
-    public GameStatus State { get; private set; } = GameStatus.AwaitingPlayers;
+    public GameStatus Status { get; private set; } = GameStatus.AwaitingPlayers;
 
-    private readonly int _mysteryNumber = RandomNumberGenerator.GetInt32(99);
+    private readonly int _mysteryNumber;
+
+    public Game(IRandomNumberProvider randomNumberProvider)
+    {
+        _mysteryNumber = randomNumberProvider.GetInt32(99);
+    }
 
     public void AddPlayer(string name, string connectionId)
     {
-        if (State != GameStatus.AwaitingPlayers)
+        if (Status != GameStatus.AwaitingPlayers)
         {
             throw new InvalidOperationException("Game already started.");
         }
@@ -32,13 +37,13 @@ public class Game
 
     private void Start()
     {
-        State = GameStatus.InProgress;
+        Status = GameStatus.InProgress;
         CurrentPlayer = Random.Shared.Next(1) == 0 ? Player1 : Player2;
     }
 
-    private void FinishGame()
+    public void Finish()
     {
-        State = GameStatus.Finished;
+        Status = GameStatus.Finished;
         CurrentPlayer = null;
     }
 
@@ -59,7 +64,7 @@ public class Game
         var isCorrect = _mysteryNumber == number;
         if (isCorrect)
         {
-            FinishGame();
+            Finish();
         }
         else
         {
@@ -76,7 +81,7 @@ public class Game
             throw new InvalidOperationException("Not enough players.");
         }
 
-        if (State != GameStatus.InProgress)
+        if (Status != GameStatus.InProgress)
         {
             throw new InvalidOperationException("Players haven't started a game yet.");
         }

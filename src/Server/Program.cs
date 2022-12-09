@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
 
+builder.Services.AddSingleton<IRandomNumberProvider, RandomNumberProvider>();
 builder.Services.AddSingleton<IGameRepository, GameRepository>();
 builder.Services.AddTransient<IGameService, GameService>();
 

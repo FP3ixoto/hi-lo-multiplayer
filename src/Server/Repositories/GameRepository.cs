@@ -11,7 +11,7 @@ public class GameRepository : IGameRepository
     public void Remove(Guid id) => _games.Remove(id);
 
     public Game? FindJoinable(string playerName) =>
-        _games.Values.FirstOrDefault(x => x.State == GameStatus.AwaitingPlayers
+        _games.Values.FirstOrDefault(x => x.Status == GameStatus.AwaitingPlayers
             && x.Player1?.Name != playerName); // for the sake of the demonstration,
                                                // let's not allow a game with two players with the same name
 

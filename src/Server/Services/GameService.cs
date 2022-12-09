@@ -8,10 +8,15 @@ public sealed class GameService : IGameService
 {
     private static readonly object Object = new();
     private readonly IGameRepository _gameRepository;
+    private readonly IRandomNumberProvider _randomNumberProvider;
 
-    public GameService(IGameRepository gameRepository)
+    public GameService(IGameRepository gameRepository, IRandomNumberProvider randomNumberProvider)
     {
+        ArgumentNullException.ThrowIfNull(gameRepository);
+        ArgumentNullException.ThrowIfNull(randomNumberProvider);
+
         _gameRepository = gameRepository;
+        _randomNumberProvider = randomNumberProvider;
     }
 
     public GameState Join(string playerName, string playerConnectionId)
@@ -25,7 +30,7 @@ public sealed class GameService : IGameService
 
             if (game is null)
             {
-                game = new Game();
+                game = new Game(_randomNumberProvider);
                 _gameRepository.Add(game);
             }
 
@@ -34,7 +39,7 @@ public sealed class GameService : IGameService
             return new GameState()
             {
                 GameId = game.Id,
-                GameStateDescription = game.State.Description(),
+                GameStateDescription = game.Status.Description(),
                 PlayerTurn = game.CurrentPlayer?.Name ?? string.Empty
             };
         }
@@ -62,10 +67,15 @@ public sealed class GameService : IGameService
         var currentPlayerName = game.CurrentPlayer.Name;
         var hiLo = game.ValidateProposedNumber(number);
 
+        if (game.Status == GameStatus.Finished)
+        {
+            _gameRepository.Remove(game.Id);
+        }
+
         return new GameState()
         {
             GameId = game.Id,
-            GameStateDescription = game.State.Description(),
+            GameStateDescription = game.Status.Description(),
             PlayerTurn = game.CurrentPlayer?.Name ?? string.Empty,
             Winner = hiLo == 0 ? currentPlayerName : string.Empty,
             LastMove = new GameMove()
@@ -90,12 +100,13 @@ public sealed class GameService : IGameService
 
         game.AssertValidInProgressGameState();
 
+        game.Finish();
         _gameRepository.Remove(game.Id);
 
         return new GameState()
         {
             GameId = game.Id,
-            GameStateDescription = game.State.Description(),
+            GameStateDescription = game.Status.Description(),
             Winner = game.Player1?.ConnectionId == playerConnectionId ? game.Player2!.Name : game.Player1!.Name
         };
     }
