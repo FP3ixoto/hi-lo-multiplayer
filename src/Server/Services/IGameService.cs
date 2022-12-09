@@ -1,4 +1,4 @@
-﻿using Server.Contracts;
+﻿using Shared.Contracts;
 
 namespace Server.Services;
 

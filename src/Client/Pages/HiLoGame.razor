@@ -15,16 +15,16 @@
 
     @if (message != null)
     {
-        <div class="invalid-feedback">@message</div>
+        <div class="validation-message">@message</div>
     }
 }
 else
 {
     <div>
-        <div class="user">#: @gameState?.GameId</div>
-        <div class="msg">Status: @gameState?.GameStateDescription</div>
-        <div class="msg">Player Turn: @gameState?.PlayerTurn</div>
-        <div class="msg">Winner: @gameState?.Winner</div>
+        <div>#: @gameState?.GameId</div>
+        <div>Status: @gameState?.GameStateDescription</div>
+        <div>Player Turn: @gameState?.PlayerTurn</div>
+        <div>Winner: @gameState?.Winner</div>
     </div>
     @if (!string.IsNullOrWhiteSpace(gameState?.Winner))
     {
@@ -36,8 +36,9 @@ else
     {
         <div>
             <input type="number" class="input-lg" placeholder="enter your move"
-                   readonly="@(gameState?.PlayerTurn != username)" @bind="@proposedNumber"></input>
-            <button class="btn btn-outline-primary" disabled="@(gameState?.PlayerTurn != username)" @onclick="@SendGuessAsync">Send</button>
+                readonly="@(gameState?.PlayerTurn != username)" @bind="@proposedNumber"></input>
+            <button class="btn btn-outline-primary" disabled="@(gameState?.PlayerTurn != username)" 
+                @onclick="@SendGuessAsync">Send</button>
         </div>
     }
     <hr />
@@ -55,7 +56,7 @@ else
                 <tr>
                     <td>@move.Player</td>
                     <td>@move.ProposedNumber</td>
-                    <td>@(move.HiLo == 1 ? "To Low" : move.HiLo == -1 ? "Too High" : "Correct") </td>
+                    <td>@(move.HiLo == 1 ? "Too Low" : move.HiLo == -1 ? "Too High" : "Correct") </td>
                 </tr>
             }
         </tbody>
@@ -63,13 +64,13 @@ else
 }
 
 @code {
-        bool playing = false;
-        string username = string.Empty;
-        string message = string.Empty;
-        int? proposedNumber;
-        GameClient? client;
-        List<GameMove> moves = new List<GameMove>();
-        GameState? gameState;
+    bool playing = false;
+    string username = string.Empty;
+    string message = string.Empty;
+    int? proposedNumber;
+    GameClient? client;
+    List<GameMove> moves = new List<GameMove>();
+    GameState? gameState;
 
     protected override Task OnInitializedAsync()
     {
@@ -90,6 +91,7 @@ else
         try
         {
             moves.Clear();
+            message = null;
             await client!.Start(username);
             playing = true;
         }
@@ -101,7 +103,7 @@ else
 
     public async Task PlayAgain()
     {
-        await client.Stop();
+        await client?.Stop();
         playing = false;
     }
 
@@ -109,7 +111,7 @@ else
     {
         if (playing && proposedNumber.HasValue)
         {
-            await client!.GuessMysteryNumber(proposedNumber.Value);
+            await client?.GuessMysteryNumber(proposedNumber.Value);
             proposedNumber = null;
         }
     }

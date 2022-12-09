@@ -75,8 +75,6 @@ public class GameTests
         _game.AddPlayer("player-1", "connection-id-1");
         _game.AddPlayer("player-2", "connection-id-2");
 
-        var playerTurn = _game.CurrentPlayer;
-
         //execute
         _game.ValidateProposedNumber(50);
 
@@ -90,8 +88,6 @@ public class GameTests
         //prepare
         _game.AddPlayer("player-1", "connection-id-1");
         _game.AddPlayer("player-2", "connection-id-2");
-
-        var playerTurn = _game.CurrentPlayer;
 
         //execute
         _game.ValidateProposedNumber(20);

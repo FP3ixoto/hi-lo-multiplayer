@@ -7,7 +7,7 @@ public sealed class GameClient : IAsyncDisposable
 {
     public const string HUBURL = "/ws";
 
-    private HubConnection _hubConnection;
+    private readonly HubConnection _hubConnection;
     private bool _started = false;
 
     /// <summary>
@@ -28,10 +28,7 @@ public sealed class GameClient : IAsyncDisposable
             .Build();
 
         // add handler for receiving game state update
-        _hubConnection.On<GameState>(Messages.UPDATEGAMESTATE, gameState =>
-        {
-            HandleGameStateUpdate(gameState);
-        });
+        _hubConnection.On<GameState>(Messages.UPDATEGAMESTATE, HandleGameStateUpdate);
     }
 
     public async ValueTask DisposeAsync()
