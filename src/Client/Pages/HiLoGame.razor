@@ -1,0 +1,129 @@
+﻿@page "/"
+@using global::Shared.Contracts;
+@using global::Shared;
+@inject HttpClient Http
+
+<PageTitle>Hi-Lo Game</PageTitle>
+
+<h1>Hi-Lo Game</h1>
+
+@if (!playing)
+{
+    <p>Enter your name to play:</p>
+    <input type="text" maxlength="32" @bind="@username" />
+    <button type="button" @onclick="@Play"><span aria-hidden="true"></span>Play!</button>
+
+    @if (message != null)
+    {
+        <div class="invalid-feedback">@message</div>
+    }
+}
+else
+{
+    <div>
+        <div class="user">#: @gameState?.GameId</div>
+        <div class="msg">Status: @gameState?.GameStateDescription</div>
+        <div class="msg">Player Turn: @gameState?.PlayerTurn</div>
+        <div class="msg">Winner: @gameState?.Winner</div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(gameState?.Winner))
+    {
+        <div>
+            <button class="btn btn-outline-primary" @onclick="@PlayAgain">Play again!</button>
+        </div>
+    }
+    else
+    {
+        <div>
+            <input type="number" class="input-lg" placeholder="enter your move"
+                   readonly="@(gameState?.PlayerTurn != username)" @bind="@proposedNumber"></input>
+            <button class="btn btn-outline-primary" disabled="@(gameState?.PlayerTurn != username)" @onclick="@SendGuessAsync">Send</button>
+        </div>
+    }
+    <hr />
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Move</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var move in moves)
+            {
+                <tr>
+                    <td>@move.Player</td>
+                    <td>@move.ProposedNumber</td>
+                    <td>@(move.HiLo == 1 ? "To Low" : move.HiLo == -1 ? "Too High" : "Correct") </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+        bool playing = false;
+        string username = string.Empty;
+        string message = string.Empty;
+        int? proposedNumber;
+        GameClient? client;
+        List<GameMove> moves = new List<GameMove>();
+        GameState? gameState;
+
+    protected override Task OnInitializedAsync()
+    {
+        client = new GameClient("http://127.0.0.1:5102");
+        client.GameStateUpdateReceived += GameStateUpdateReceived;
+        return Task.CompletedTask;
+    }
+
+    public async Task Play()
+    {
+        // check username is valid
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            message = "Please enter a name";
+            return;
+        };
+
+        try
+        {
+            moves.Clear();
+            await client!.Start(username);
+            playing = true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+
+    public async Task PlayAgain()
+    {
+        await client.Stop();
+        playing = false;
+    }
+
+    async Task SendGuessAsync()
+    {
+        if (playing && proposedNumber.HasValue)
+        {
+            await client!.GuessMysteryNumber(proposedNumber.Value);
+            proposedNumber = null;
+        }
+    }
+
+    public void GameStateUpdateReceived(object sender, GameStateUpdateEventHandlerArgs e)
+    {
+        gameState = e.GameState;
+
+        if (e.GameState.LastMove is not null)
+        {
+            moves.Add(e.GameState.LastMove);
+        }
+
+        // Inform blazor the UI needs updating
+        StateHasChanged();
+    }
+}
