@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Server.Services;
+using Shared;
 
 namespace Server.Hubs;
 
@@ -17,14 +18,14 @@ public class GameHub : Hub
     public async Task GuessNumber(int number)
     {
         var gameState = _gameService.TryGuessMysteryNumber(Context.ConnectionId, number);
-        await Clients.Group(gameState.GameId.ToString()).SendAsync("UpdateGameState", gameState);
+        await Clients.Group(gameState.GameId.ToString()).SendAsync(Messages.UPDATEGAMESTATE, gameState);
     }
 
     public async Task Register(string name)
     {
         var gameState = _gameService.Join(name, Context.ConnectionId);
         await Groups.AddToGroupAsync(Context.ConnectionId, gameState.GameId.ToString());
-        await Clients.Group(gameState.GameId.ToString()).SendAsync("UpdateGameState", gameState);
+        await Clients.Group(gameState.GameId.ToString()).SendAsync(Messages.UPDATEGAMESTATE, gameState);
     }
 
     public override async Task OnConnectedAsync()
@@ -38,7 +39,7 @@ public class GameHub : Hub
         //If game is complete delete it
         var gameState = _gameService.Abandon(Context.ConnectionId);
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameState.GameId.ToString());
-        await Clients.Group(gameState.GameId.ToString()).SendAsync("UpdateGameState", gameState);
+        await Clients.Group(gameState.GameId.ToString()).SendAsync(Messages.UPDATEGAMESTATE, gameState);
 
         _logger.LogInformation("Disconnected: {ConnectionId}", Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);

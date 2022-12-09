@@ -1,6 +1,6 @@
-﻿using Server.Contracts;
-using Server.Domain;
+﻿using Server.Domain;
 using Server.Repositories;
+using Shared.Contracts;
 
 namespace Server.Services;
 

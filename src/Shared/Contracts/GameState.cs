@@ -1,4 +1,4 @@
-﻿namespace Server.Contracts;
+﻿namespace Shared.Contracts;
 
 public class GameState
 {
