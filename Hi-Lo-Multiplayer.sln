@@ -5,11 +5,6 @@ VisualStudioVersion = 17.5.33103.201
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "src\Server\Server.csproj", "{DA6D49D6-B04F-430C-A0DF-5908EF9D0F03}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wwwroot", "wwwroot", "{6E3221BA-3717-44D9-9D96-75FD3B959869}"
-	ProjectSection(SolutionItems) = preProject
-		index.html = index.html
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server.Tests", "tests\Server.Tests\Server.Tests.csproj", "{6115F5B8-A0DA-41E4-BA42-4E4E8EF52EA2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "src\Client\Client.csproj", "{36D0E659-55C0-42E5-8672-5C3DC3D478B3}"
