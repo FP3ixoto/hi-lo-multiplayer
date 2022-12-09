@@ -77,11 +77,15 @@
                 //var encodedName = name;
                 //var encodedMsg = message;
                 // Add the message to the page.
+                var hiLo = "Correct";
+                if (gameState.lastMove.hiLo == 1) hiLo = 'Too Low'
+                else if (gameState.lastMove.hiLo == -1) hiLo = 'Too High';
+
                 var liElement = document.createElement('li');
                 liElement.innerHTML =
                     '<strong>' + gameState.lastMove.player
                     + '</strong>:&nbsp;&nbsp;' + gameState.lastMove.proposedNumber
-                    + '&nbsp;&nbsp;-&nbsp;&nbsp;' + gameState.lastMove.hiLo;
+                + '&nbsp;&nbsp;-&nbsp;&nbsp;' + hiLo;
                 document.getElementById('discussion').appendChild(liElement);
             });
 

@@ -1,4 +1,3 @@
-﻿namespace Server.Domain
-{
-    public record Player(string Name, string ConnectionId);
-}
+﻿namespace Server.Domain;
+
+public record Player(string Name, string ConnectionId);

@@ -6,6 +6,7 @@ namespace Server.Services;
 
 public sealed class GameService : IGameService
 {
+    private static readonly object Object = new();
     private readonly IGameRepository _gameRepository;
 
     public GameService(IGameRepository gameRepository)
@@ -18,22 +19,25 @@ public sealed class GameService : IGameService
         ArgumentException.ThrowIfNullOrEmpty(playerName);
         ArgumentException.ThrowIfNullOrEmpty(playerConnectionId);
 
-        var game = _gameRepository.FindOpen();
-
-        if (game is null)
+        lock (Object)
         {
-            game = new Game();
-            _gameRepository.Add(game);
+            var game = _gameRepository.FindJoinable(playerName);
+
+            if (game is null)
+            {
+                game = new Game();
+                _gameRepository.Add(game);
+            }
+
+            game.AddPlayer(playerName, playerConnectionId);
+
+            return new GameState()
+            {
+                GameId = game.Id,
+                GameStateDescription = game.State.Description(),
+                PlayerTurn = game.CurrentPlayer?.Name ?? string.Empty
+            };
         }
-
-        game.AddPlayer(playerName, playerConnectionId);
-
-        return new GameState()
-        {
-            GameId = game.Id,
-            GameStateDescription = game.State.Description(),
-            PlayerTurn = game.CurrentPlayer?.Name ?? string.Empty
-        };
     }
 
     public GameState TryGuessMysteryNumber(string playerConnectionId, int number)
@@ -56,7 +60,7 @@ public sealed class GameService : IGameService
         }
 
         var currentPlayerName = game.CurrentPlayer.Name;
-        var hiLo = game.ProposeNumber(number);
+        var hiLo = game.ValidateProposedNumber(number);
 
         return new GameState()
         {
