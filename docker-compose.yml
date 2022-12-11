@@ -1,26 +1,14 @@
 version: '3.4'
 
-networks:
-  docker-network:
-    name: docker-network
-
 services:
   server:
     image: ${DOCKER_REGISTRY-}server
     build:
       context: .
       dockerfile: src/Server/Dockerfile
-    networks:
-      docker-network:
-        aliases:
-          - hi-lo-server
       
   client:
     image: ${DOCKER_REGISTRY-}client
     build:
       context: .
       dockerfile: src/Client/Dockerfile
-    networks:
-      docker-network:
-        aliases:
-          - hi-lo-client
