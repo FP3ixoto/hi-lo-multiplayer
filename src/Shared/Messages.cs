@@ -6,17 +6,17 @@
 public static class Messages
 {
     /// <summary>
-    /// Event name when a message is received
+    /// Name of the Hub method to send a move
     /// </summary>
     public const string GUESSNUMBER = "GuessNumber";
 
     /// <summary>
-    /// Name of the Hub method to register a new user
+    /// Name of the Hub method to register a new player
     /// </summary>
     public const string REGISTER = "Register";
 
     /// <summary>
-    /// Name of the Hub method to send a message
+    /// Event name when a game state update is received
     /// </summary>
     public const string UPDATEGAMESTATE = "UpdateGameState";
 }

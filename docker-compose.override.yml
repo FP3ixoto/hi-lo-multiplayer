@@ -1,0 +1,13 @@
+version: '3.9'
+
+services:
+  server:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+    ports:
+      - "5000:80"
+
+  client:
+    ports:
+      - "5001:80"

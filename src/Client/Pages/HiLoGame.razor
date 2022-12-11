@@ -1,7 +1,7 @@
 ﻿@page "/"
 @using global::Shared.Contracts;
 @using global::Shared;
-@inject HttpClient Http
+@inject IGameClient client
 
 <PageTitle>Hi-Lo Game</PageTitle>
 
@@ -68,13 +68,11 @@ else
     string username = string.Empty;
     string message = string.Empty;
     int? proposedNumber;
-    GameClient? client;
     List<GameMove> moves = new List<GameMove>();
     GameState? gameState;
 
     protected override Task OnInitializedAsync()
     {
-        client = new GameClient("http://127.0.0.1:5102");
         client.GameStateUpdateReceived += GameStateUpdateReceived;
         return Task.CompletedTask;
     }
@@ -91,8 +89,8 @@ else
         try
         {
             moves.Clear();
-            message = null;
-            await client!.Start(username);
+            message = string.Empty;
+            await client.Start(username);
             playing = true;
         }
         catch (Exception e)
@@ -103,7 +101,7 @@ else
 
     public async Task PlayAgain()
     {
-        await client?.Stop();
+        await client.Stop();
         playing = false;
     }
 
@@ -111,7 +109,7 @@ else
     {
         if (playing && proposedNumber.HasValue)
         {
-            await client?.GuessMysteryNumber(proposedNumber.Value);
+            await client.GuessMysteryNumber(proposedNumber.Value);
             proposedNumber = null;
         }
     }

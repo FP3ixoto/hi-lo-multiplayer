@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Options;
 using Shared.Contracts;
 
 namespace Shared;
 
-public sealed class GameClient : IAsyncDisposable
+public sealed class GameClient : IGameClient
 {
     public const string HUBURL = "/ws";
 
@@ -13,12 +14,12 @@ public sealed class GameClient : IAsyncDisposable
     /// <summary>
     /// Ctor: create a new client for the given hub URL
     /// </summary>
-    /// <param name="url">The base URL for the site, e.g. https://localhost:1234 </param>
-    public GameClient(string url)
+    /// <param name="options">The options model with the base URL for the site, e.g. https://localhost:1234 </param>
+    public GameClient(IOptions<GameClientOptions> options)
     {
-        ArgumentException.ThrowIfNullOrEmpty(url);
+        ArgumentNullException.ThrowIfNull(options);
 
-        var hubUrl = url.TrimEnd('/') + HUBURL;
+        var hubUrl = options.Value.Url.TrimEnd('/') + HUBURL;
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(hubUrl, config =>
             {
@@ -33,8 +34,8 @@ public sealed class GameClient : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await _hubConnection.DisposeAsync();
         await Stop();
+        await _hubConnection.DisposeAsync();
     }
 
     /// <summary>
@@ -62,7 +63,6 @@ public sealed class GameClient : IAsyncDisposable
             _started = false;
         }
     }
-
 
     public async Task GuessMysteryNumber(int number)
     {
